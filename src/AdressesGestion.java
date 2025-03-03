@@ -1,30 +1,25 @@
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class AdressesGestion {
+class AdressesGestion {
     private String prefixe;
     private int dernierOctet;
-    private Set<String> adressesAttribuees;
-
+    private List<String> adressesAttribuees;
 
     public AdressesGestion(String prefixe) {
         this.prefixe = prefixe;
         this.dernierOctet = 1;
-        this.adressesAttribuees = new HashSet<>();
+        this.adressesAttribuees = new ArrayList<>();
     }
 
-    // Génère une nouvelle adresse unique
     public String attribuerNouvelleAdresse() {
         while (adressesAttribuees.contains(prefixe + dernierOctet)) {
-            dernierOctet++;  // Incrémente pour éviter les doublons
+            dernierOctet++;
         }
         String nouvelleAdresse = prefixe + dernierOctet;
         adressesAttribuees.add(nouvelleAdresse);
         return nouvelleAdresse;
-    }
-
-    // Libère une adresse lorsqu'une application quitte le réseau
-    public void libererAdresse(String adresse) {
-        adressesAttribuees.remove(adresse);
     }
 }

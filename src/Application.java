@@ -1,19 +1,17 @@
 import java.util.ArrayList;
 import java.util.List;
-
-public class Application {
+class Application {
     private String nom;
     private String adresseLogique;
     private String adresseIP;
     private int port;
     private String urlRMI;
     private String typeContenu;
-    private List<Connexion> connexions; // Liste des connexions vers d'autres applications
+    private List<Connexion> connexions;
 
-    // Constructeur avec toutes les informations
-    public Application(String nom, AdressesGestion gestionnaire, String adresseIP, int port, String urlRMI, String typeContenu) {
+    public Application(String nom, String adresseLogique, String adresseIP, int port, String urlRMI, String typeContenu) {
         this.nom = nom;
-        this.adresseLogique = gestionnaire.attribuerNouvelleAdresse();
+        this.adresseLogique = adresseLogique;
         this.adresseIP = adresseIP;
         this.port = port;
         this.urlRMI = urlRMI;
@@ -21,7 +19,10 @@ public class Application {
         this.connexions = new ArrayList<>();
     }
 
-    // Ajouter une connexion à une autre application
+    public String getNom() {
+        return nom;
+    }
+
     public void ajouterConnexion(Application app, int metrique) {
         connexions.add(new Connexion(app.getAdresse(), app.getAdresseIP(), app.getPort(), app.getUrlRMI(), metrique, app.getTypeContenu()));
     }
@@ -30,30 +31,40 @@ public class Application {
         System.out.println(nom + " (" + adresseIP + ") a reçu : " + message);
     }
 
-    public String getAdresse() {
-        return adresseLogique;
-    }
-
-    public String getAdresseIP() {
-        return adresseIP;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public String getUrlRMI() {
-        return urlRMI;
-    }
-
-    public String getTypeContenu() {
-        return typeContenu;
-    }
+    public String getAdresse() { return adresseLogique; }
+    public String getAdresseIP() { return adresseIP; }
+    public int getPort() { return port; }
+    public String getUrlRMI() { return urlRMI; }
+    public String getTypeContenu() { return typeContenu; }
 
     public void afficherConnexions() {
         System.out.println("Connexions de " + nom + " :");
         for (Connexion c : connexions) {
             System.out.println(" - " + c);
         }
+    }
+}
+
+class Application1 {
+    public static void main(String[] args) {
+        AdressesGestion gestionnaire = new AdressesGestion("192.168.1.");
+        Application app = new Application("Application 1", gestionnaire.attribuerNouvelleAdresse(), "10.0.0.1", 8080, "rmi://app1", "Texte");
+        System.out.println(app.getNom() + " démarrée avec l'adresse " + app.getAdresse());
+    }
+}
+
+class Application2 {
+    public static void main(String[] args) {
+        AdressesGestion gestionnaire = new AdressesGestion("192.168.1.");
+        Application app = new Application("Application 2", gestionnaire.attribuerNouvelleAdresse(), "10.0.0.2", 9090, "rmi://app2", "Image");
+        System.out.println(app.getNom() + " démarrée avec l'adresse " + app.getAdresse());
+    }
+}
+
+class Application3 {
+    public static void main(String[] args) {
+        AdressesGestion gestionnaire = new AdressesGestion("192.168.1.");
+        Application app = new Application("Application 3", gestionnaire.attribuerNouvelleAdresse(), "10.0.0.3", 7070, "rmi://app3", "Vidéo");
+        System.out.println(app.getNom() + " démarrée avec l'adresse " + app.getAdresse());
     }
 }

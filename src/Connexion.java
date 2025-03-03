@@ -1,4 +1,4 @@
-public class Connexion {
+class Connexion {
     private String adresseLogique;
     private String adresseIP;
     private int port;
