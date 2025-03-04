@@ -1,70 +1,89 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.io.*;
+import java.net.*;
+
 class Application {
     private String nom;
-    private String adresseLogique;
-    private String adresseIP;
-    private int port;
-    private String urlRMI;
-    private String typeContenu;
-    private List<Connexion> connexions;
+    private Niveau niveau;
+    private PrintWriter out;
+    private BufferedReader in;
 
-    public Application(String nom, String adresseLogique, String adresseIP, int port, String urlRMI, String typeContenu) {
+    public Application(String nom, Niveau niveau) {
         this.nom = nom;
-        this.adresseLogique = adresseLogique;
-        this.adresseIP = adresseIP;
-        this.port = port;
-        this.urlRMI = urlRMI;
-        this.typeContenu = typeContenu;
-        this.connexions = new ArrayList<>();
+        this.niveau = niveau;
+
+        try {
+            Socket socket = new Socket("localhost", 5050);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // Thread pour écouter les messages en temps réel
+            new Thread(() -> {
+                try {
+                    String message;
+                    while ((message = in.readLine()) != null) {
+                        System.out.println(message);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        } catch (IOException e) {
+            System.out.println("❌ Erreur : Impossible de se connecter au serveur Recouvrement !");
+        }
     }
+
+    public void envoyerMessage(String message) {
+        System.out.println("📤 " + nom + " envoie : " + message);
+        out.println(nom + " (Niveau " + niveau + ") : " + message);
+    }
+
+
+
 
     public String getNom() {
         return nom;
     }
-
-    public void ajouterConnexion(Application app, int metrique) {
-        connexions.add(new Connexion(app.getAdresse(), app.getAdresseIP(), app.getPort(), app.getUrlRMI(), metrique, app.getTypeContenu()));
+    public Niveau getNiveau() {
+        return niveau;
     }
+}
 
-    public void recevoirMessage(String message) {
-        System.out.println(nom + " (" + adresseIP + ") a reçu : " + message);
-    }
-
-    public String getAdresse() { return adresseLogique; }
-    public String getAdresseIP() { return adresseIP; }
-    public int getPort() { return port; }
-    public String getUrlRMI() { return urlRMI; }
-    public String getTypeContenu() { return typeContenu; }
-
-    public void afficherConnexions() {
-        System.out.println("Connexions de " + nom + " :");
-        for (Connexion c : connexions) {
-            System.out.println(" - " + c);
-        }
-    }
+enum Niveau {
+    NIVEAU_1, NIVEAU_2, NIVEAU_3;
 }
 
 class Application1 {
     public static void main(String[] args) {
-        AdressesGestion gestionnaire = new AdressesGestion("192.168.1.");
-        Application app = new Application("Application 1", gestionnaire.attribuerNouvelleAdresse(), "10.0.0.1", 8080, "rmi://app1", "Texte");
-        System.out.println(app.getNom() + " démarrée avec l'adresse " + app.getAdresse());
+        Application app = new Application("Application 1", Niveau.NIVEAU_1);
+
     }
 }
 
 class Application2 {
     public static void main(String[] args) {
-        AdressesGestion gestionnaire = new AdressesGestion("192.168.1.");
-        Application app = new Application("Application 2", gestionnaire.attribuerNouvelleAdresse(), "10.0.0.2", 9090, "rmi://app2", "Image");
-        System.out.println(app.getNom() + " démarrée avec l'adresse " + app.getAdresse());
+        Application app = new Application("Application 2", Niveau.NIVEAU_2);
+
     }
 }
 
 class Application3 {
     public static void main(String[] args) {
-        AdressesGestion gestionnaire = new AdressesGestion("192.168.1.");
-        Application app = new Application("Application 3", gestionnaire.attribuerNouvelleAdresse(), "10.0.0.3", 7070, "rmi://app3", "Vidéo");
-        System.out.println(app.getNom() + " démarrée avec l'adresse " + app.getAdresse());
+        Application app = new Application("Application 3", Niveau.NIVEAU_3);
+
     }
 }
+class Application4 {
+    public static void main(String[] args) {
+        Application app = new Application("Application 4", Niveau.NIVEAU_2);
+
+    }
+}
+class Application5 {
+    public static void main(String[] args) {
+        Application app = new Application("Application 5", Niveau.NIVEAU_3);
+
+    }
+}
+
+
