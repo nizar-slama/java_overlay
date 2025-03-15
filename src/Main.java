@@ -20,7 +20,7 @@ class Application {
     public void startServer() {
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(port)) {
-                System.out.println(name + " écoute sur le port " + port);
+                System.out.println("✅ " + name + " écoute sur le port " + port);
                 while (true) {
                     Socket socket = serverSocket.accept();
                     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -45,7 +45,7 @@ class Application {
 }
 
 class Network {
-    static Map<String, Application> applications = new HashMap<>();
+    static Map<String, Application> applications = new LinkedHashMap<>();
 
     static {
         applications.put("app1", new Application("app1", 5001));
@@ -59,13 +59,13 @@ class Network {
         Application a1 = applications.get(app1);
         Application a2 = applications.get(app2);
         if (a1 != null && a2 != null) {
-            a1.addNeighbor(a2, cost);
-            a2.addNeighbor(a1, cost);
+            a1.neighbors.put(a2, cost);
+            a2.neighbors.put(a1, cost);
         }
     }
 
     public static void printGraph() {
-        System.out.println("\nArbre formé :");
+        System.out.println("\n📡 Arbre de diffusion formé :");
         Set<Application> visited = new HashSet<>();
         for (Application app : applications.values()) {
             if (!visited.contains(app)) {
@@ -79,6 +79,7 @@ class Network {
         visited.add(app);
         System.out.println(prefix + "└── " + app.name);
         List<Application> neighborsList = new ArrayList<>(app.neighbors.keySet());
+        neighborsList.removeAll(visited);
         for (int i = 0; i < neighborsList.size(); i++) {
             Application neighbor = neighborsList.get(i);
             String newPrefix = prefix + (i == neighborsList.size() - 1 ? "    " : "│   ");
@@ -122,14 +123,14 @@ class MessageRouter {
     }
 
     public static void sendMessage(String source, String destination, String message) {
-        List<Application> path = findShortestPath(Network.applications.get(source), Network.applications.get(destination));
-        System.out.println("\nChemin emprunté: " + path.stream().map(app -> app.name).reduce((a, b) -> a + " -> " + b).orElse(""));
-        for (int i = 0; i < path.size(); i++) {
-            Application app = path.get(i);
-            if (i > 0) {
-                String sender = path.get(i - 1).name;
-                app.sendMessage("localhost", app.port, "Message de " + sender + " : " + message);
-            }
+        Application src = Network.applications.get(source);
+        Application dest = Network.applications.get(destination);
+        List<Application> path = findShortestPath(src, dest);
+        System.out.println(String.join(" -> ", path.stream().map(app -> app.name).toList()));
+        for (int i = 1; i < path.size(); i++) {
+            Application fromApp = path.get(i - 1);
+            Application toApp = path.get(i);
+            toApp.sendMessage("localhost", toApp.port, "Message de " + fromApp.name + " : " + message);
         }
     }
 }
@@ -138,32 +139,36 @@ class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Définissez les voisins pour chaque application :");
+        System.out.println("===== CONFIGURATION DES VOISINS =====\n");
+        int count = 1;
         for (String appName : Network.applications.keySet()) {
-            System.out.println("Entrez les voisins de " + appName + " sous forme (nom coût), tapez 'fin' pour arrêter :");
+            System.out.printf("[%d/5] Voisins pour '%s' (nom coût), 'fin' pour terminer :\n", count++, appName);
             while (scanner.hasNext()) {
                 String neighbor = scanner.next();
                 if (neighbor.equals("fin")) break;
                 int cost = scanner.nextInt();
                 Network.addConnection(appName, neighbor, cost);
             }
+            System.out.println();
         }
 
         Network.printGraph();
 
-        System.out.println("Démarrage des serveurs...");
+        System.out.println("\n===== DÉMARRAGE DES SERVEURS =====");
         for (Application app : Network.applications.values()) {
             app.startServer();
         }
 
-        System.out.println("Entrez l'application source :");
+        System.out.println("\n===== ENVOI D'UN MESSAGE =====");
+        System.out.print("Application source : ");
         String source = scanner.next();
-        System.out.println("Entrez l'application destination :");
+        System.out.print("Application destination : ");
         String destination = scanner.next();
-        System.out.println("Entrez le message à envoyer :");
         scanner.nextLine();
+        System.out.print("Message à envoyer : ");
         String message = scanner.nextLine();
 
+        System.out.print("\nChemin emprunté : ");
         MessageRouter.sendMessage(source, destination, message);
     }
 }
