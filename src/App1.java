@@ -1,5 +1,5 @@
-class App1 {
+public class App1 {
     public static void main(String[] args) {
-        System.out.println("Application 1 démarrée");
+        Network.applications.get("app1").startServer();
     }
 }
